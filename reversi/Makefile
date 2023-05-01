@@ -56,9 +56,9 @@ SRC_DIRS ?= ./src
 CC=zcc
 AS=z88dk-z80asm
 
-ADDL_DIR1 :=
-ADDL_DIR2 := 
-ADDL_DIR3 := 
+ADDL_DIR1 := ../../NABU-LIB
+ADDL_DIR2 := ../../NABU-LIB/NABULIB
+ADDL_DIR3 :=
 
 ADDL_LIB1 :=
 ADDL_LIB2 := 
@@ -91,7 +91,6 @@ $(BUILD_DIR)/%.asm.o: %.asm
 .PHONY: clean
 
 clean:
-	$(info $(RM) -r $(TARGET_EXEC)* $(BUILD_DIR))
 	$(RM) -r $(TARGET_EXEC)* $(BUILD_DIR)
 
 go:
@@ -104,7 +103,7 @@ endif
 ifeq ('$(PROJECT_DEVICE)','nabu')
 	cp ./$(TARGET_EXEC) "$(NABU_CACHE)/000001.nabu"
 	cd "$(NABEM_PATH)"; \
-	$(WINE_REQUIRED) "$(NABEM_PATH)/$(NABEM_EXEC)" nabupc -window -kbd nabu_hle -hcca null_modem -bitb socket.127.0.0.1:5816
+	$(WINE_REQUIRED) "$(NABEM_PATH)/$(NABEM_EXEC)" nabupc -window -kbd nabu_hle -hcca null_modem -bitb socket.127.0.0.1:5816 &
 endif
 
 tnfs: $(TARGET_EXEC)

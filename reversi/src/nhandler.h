@@ -1,3 +1,4 @@
+void ninit(void);
 void nopen(int basic_unit, int rw_mode, int trans, char *url);
 void nclose(int basic_unit);
 void nstatus(int basic_unit, int *bytes_waiting, int *connected, int *last_error);

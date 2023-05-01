@@ -1,3 +1,4 @@
+
 #include "sound.h"
 
 static unsigned char sound0[] = {0x40, 0x87, 0x50, 0x03, 0x42, 0x8F, 0x30, 0x0A, 0x17, 0x11, 0x50};                                                              // 0E74 [0]
@@ -17,19 +18,38 @@ static unsigned char sound13[] = {0x82, 0x40, 0x40, 0x0F, 0x18, 0x15, 0x90, 0x42
 static unsigned char sound14[] = {0x82, 0xD6, 0x70, 0x40, 0x32, 0x12, 0x90};                                                                                     // 0F2E [14]
 static unsigned char sound15[] = {0x82, 0xCA, 0x70, 0x04, 0x32, 0x12, 0x90};
 
+inline void ayWrite(uint8_t reg, uint8_t val);
+
+void sound_init(void)
+{
+    // Enable only the Tone Generator on Channel A
+    ayWrite(0x7, 0b00111110);
+
+    // Set the amplitude (volume) to maximum on Channel A
+    ayWrite(0x8, 0b00001111);
+}
+
 void sound_negative_beep(void)
 {
+    ayWrite(0, 200);
+    ayWrite(1, 1);
 }
 
 void sound_chime(void)
 {
+    ayWrite(0, 200);
+    ayWrite(1, 1);
 }
 
 void sound_mode_change(void)
 {
+    ayWrite(0, 200);
+    ayWrite(1, 1);
 }
 
 void sound_confirm(void)
 {
+    ayWrite(0, 200);
+    ayWrite(1, 1);
 }
 

@@ -61,7 +61,8 @@ extern unsigned char response[1024];
 
 #define NET_ERR_OK             0x80
 
-unsigned char  network_open(char *url, unsigned char mode, unsigned char translation);
+unsigned char network_init(void);
+unsigned char network_open(char *url, unsigned char mode, unsigned char translation);
 unsigned char  network_close(void);
 unsigned char  network_status(NetStatus *ns);
 unsigned short network_read(char *buf, unsigned short len);

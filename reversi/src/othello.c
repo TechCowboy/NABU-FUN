@@ -95,11 +95,11 @@ int my_mov(char b[64], char p, char o, char e, int *m, int *n);
 #ifdef BUILD_ADAM
   #define ADAM_OR_NABU
   //#error ADAM build selected.
+
 #endif
 
 #ifdef BUILD_NABU
-  #define ADAM_OR_NABU
-  //#error NABU build selected.
+#define ADAM_OR_NABU
 #endif
 
 #ifdef ADAM_OR_NABU
@@ -112,11 +112,14 @@ int my_mov(char b[64], char p, char o, char e, int *m, int *n);
 #include "spriteset.h"
 #include "joystick.h"
 #include "sound.h"
+#include <conio.h>
 
 #ifdef BUILD_ADAM
 #include "smartkeys.h"
 #include "eos.h"
 #endif
+
+
 
 	/*
 	DefPatternTable EQU     0h
@@ -168,9 +171,13 @@ int trig=1;
 
 int print_trace(char *message);
 int delay(int d);
-
+void translate_from_atari(char *atari_input, int *x, int *y, int *trig);
+void translate_to_atari(int i, int j, int *x, int *y);
+char getmov_local(char b[64], int *i, int *j);
+char getmov_remote(char b[64], int *i, int *j);
 char my_name[16];
 char their_name[16];
+int game_type;
 
 #define COMPUTER_OPPONENT 1
 #define LOCAL_OPPONENT	  2
@@ -974,12 +981,15 @@ int prtscr(char b[64])
 }
 
 
-char getmov_local(int *i, int *j)
+char getmov_local(char b[64], int *i, int *j)
 {
 	int joy = 0;
 	int trig = 1;
 //	int c;
 	long joytimer = 0;
+	int x, y;
+	char atari_output[32];
+	int old_i=-1, old_j=-1;
 
 	movsprite(*i, *j, MOVING_COLOR);
 
@@ -1040,20 +1050,67 @@ char getmov_local(int *i, int *j)
 			*i = 0;
 
 		movsprite(*i, *j, MOVING_COLOR);
+		if ((game_type == HOSTING_GAME) || (game_type == OTHER_HOSTED))
+		{
+			if ((old_i != *i) || (old_j != *j) || trig)
+			{
+				old_i = *i;
+				old_j = *j;
+				translate_to_atari(*i, *j, &x, &y);
+				sprintf(atari_output, "%d,%d,%d", x,y,trig);
+				print_info(atari_output);
+				nprint(0, atari_output);
+			}
+		}
 
 		if (trig == 0)
 		{
-			break;
+			movsprite(*i, *j, SELECTED_COLOR);
+			if (chkmov(b, mine, *i, *j) > 0)
+			{
+				break;
+			}
+			else
+			{
+				print_info("***Illegal Move ***");
+				sound_negative_beep();
+			}
 		}
 	}
-	movsprite(*i, *j, SELECTED_COLOR);
+
 
 	return 'M';
 }
 
 char getmov_remote(char b[64], int *i, int *j) 
 {
-	my_mov(b, his, mine, EMPTY, i, j);
+	char atari_input[32];
+	int  trig;
+
+	trig = 1;
+	while(true)
+	{
+		ninput(0, atari_input);
+
+		translate_from_atari(atari_input, i, j, &trig);
+		movsprite(*i, *j, MOVING_COLOR);
+		if (trig == 0)
+		{
+			movsprite(*i, *j, SELECTED_COLOR);
+			if (chkmov(b, his, *i, *j) > 0)
+			{	
+				break;
+			}
+			else
+			{
+
+				print_info("***Illegal Move ***");
+				sound_negative_beep();
+			}
+		}
+	}
+	movsprite(*i, *j, SELECTED_COLOR);
+
 	return 'M';
 }
 
@@ -1390,7 +1447,7 @@ int game(char b[64], int game_type)
 	selfplay = ' ';
 	ff = 0;
 
-
+	movsprite(i, j, MOVING_COLOR);
 
 	if (mefirst)
 	{
@@ -1428,7 +1485,7 @@ int game(char b[64], int game_type)
 				{
 					sprintf(temp, "%s's Move", my_name);
 					print_info(temp);
-					c = getmov_local(&i,&j);
+					c = getmov_local(b, &i,&j);
 				} else
 				{
 					sprintf(temp, "%s's Move", their_name);
@@ -1439,7 +1496,7 @@ int game(char b[64], int game_type)
 							c = my_mov(b, his, mine, EMPTY, &i, &j);
 							break;
 						case LOCAL_OPPONENT:
-							c = getmov_local(&i, &j);
+							c = getmov_local(b, &i, &j);
 							break;
 						case OTHER_HOSTED:
 						case HOSTING_GAME:
@@ -1480,7 +1537,7 @@ int game(char b[64], int game_type)
 				{
 					sprintf(temp, "%s's Move", my_name);
 					print_info(temp);
-					c = getmov_local(&i, &j);
+					c = getmov_local(b, &i, &j);
 				}
 				else
 				{
@@ -1493,7 +1550,7 @@ int game(char b[64], int game_type)
 							c = my_mov(b, his, mine, EMPTY, &i, &j);
 							break;
 					case LOCAL_OPPONENT:
-							c = getmov_local(&i, &j);
+							c = getmov_local(b, &i, &j);
 							break;
 					case OTHER_HOSTED:
 					case HOSTING_GAME:
@@ -1617,14 +1674,20 @@ Istart:		if (cntbrd(b,EMPTY) == 0) return 'D';
 #endif
 
 #ifdef ADAM_OR_NABU
-void translate_from_atari(char *atari_input, int *x, int *y, int *trig)
+void translate_from_atari(char *atari_input, int *i, int *j, int *trig)
 {
-	char message[32];
-	sscanf(atari_input, "%d,%d,%d", x,y,trig);
+	int x,y;
+	if (sscanf(atari_input, "%d,%d,%d", &x,&y,trig) >= 0)
+	{
+		*j = (x - 22) / 5;
+		*i = (y - 5 ) / 4;
+	}
+}
 
-	print_info(atari_input);
-	sprintf(message, "x:%d y:%d trig:%d",*x,*y,*trig);
-	print_no_clear(status_y-1,message);
+void translate_to_atari(int i, int j, int *x, int *y)
+{
+	*x = j*5 + 22;
+	*y = i*4 + 5; 
 }
 
 #endif
@@ -1636,9 +1699,9 @@ int main()
 	int i;
 	char key;
 	char message[32];
-	int  game_type;
 	int  waiting;
 	int  connection = 0;
+	int  last_error, bytes_waiting;
 	char waitingstr[] = {"|/-\\"};
 	
 
@@ -1678,7 +1741,10 @@ int main()
 
 #endif
 
+
 #ifdef ADAM_OR_NABU
+
+		ninit();
 
 		vdp_color(BACKGROUND_COLOUR_TEXT);
 
@@ -1720,7 +1786,7 @@ int main()
 
 #ifdef ADAM_OR_NABU
 
-	printf("\nThis program uses TCP port 6502.\n\n");
+	printf("\nNetwork games use TCP port 6502.\n\n");
 
 #ifdef BUILD_ADAM
 
@@ -1765,13 +1831,14 @@ int main()
 
 	vdp_color(BACKGROUND_COLOUR_TEXT);
 	vdp_set_mode(mode_2);
+	clrscr();
 
 	sound_mode_change();
 	printf("\nPress Number to make your\nselection:\n");
 	printf("(1) 1 Player vs Computer\n");
 	printf("(2) 2 Players locally\n");
-	//printf("(3) 2 Players, I will host (You will be Black)\n");
-	//printf("(4) 2 Players, They will host (They will be Black)\n");
+	printf("(3) 2 Players, I will host\n     (You will be Black)\n");
+	printf("(4) 2 Players, They host\n     (They will be Black)\n");
 	printf("(5) Quit\n");
 
 	game_type = 0;
@@ -1787,7 +1854,6 @@ int main()
 		case '2':
 			game_type = LOCAL_OPPONENT;
 			break;
-		/*
 		case '3':
 			game_type = HOSTING_GAME;
 			strcpy(host, "");
@@ -1795,7 +1861,6 @@ int main()
 		case '4':
 			game_type = OTHER_HOSTED;
 			break;
-		*/
 		case '5':
 			game_type = 0;
 			break;
@@ -1808,6 +1873,7 @@ int main()
 #endif
 
 #if BUILD_ADAM
+	clrscr();
 	if ((game_type == HOSTING_GAME) || (game_type == OTHER_HOSTED))
 	{
 
@@ -1818,7 +1884,7 @@ int main()
 			gets(host);
 			host[strlen(host) - 1] = '\0';
 		}
-		sprintf(url, "TCP://%s:6502/", host);
+		sprintf(url, "N:TCP://%s:6502/", host);
 
 		vdp_color(BACKGROUND_COLOUR_GRAPHICS);
 
@@ -1833,7 +1899,7 @@ int main()
 			while (!connection)
 			{
 				printf("%c%c", waitingstr[waiting], 8);
-				connection = true;
+				nstatus(0, &bytes_waiting, &connection, &last_error);
 				waiting++;
 				if (waiting > 4)
 					waiting = 0;
@@ -1846,43 +1912,81 @@ int main()
 		}
 	}
 #else
-	if ((game_type == HOSTING_GAME) || (game_type == OTHER_HOSTED))	
+	clrscr(); 
+	if ((game_type == HOSTING_GAME) || (game_type == OTHER_HOSTED))
 	{
-
 		if (game_type == OTHER_HOSTED)
 		{
+			while (1)
+			{
+				if (game_type == OTHER_HOSTED)
+				{
+					printf("Enter the IP of the host:\n");
+					gets(host);
+					host[strlen(host)-1] = '\0';
+				}
+				if (strcmp(host, "") != 0)
+					break;
+			}
+		} else
+			strcpy(host, "");
 			
-			printf("Enter the IP of the host:\n");
-			gets(host);
-			host[strlen(host)-1] = '\0';
-		}
-		sprintf(url, "TCP://%s:6502/", host);
+		sprintf(url, "N:TCP://%s:6502/", host);
 
 		vdp_color(BACKGROUND_COLOUR_GRAPHICS);
 
 		vdp_set_mode(mode_2);
+		clrscr();
 
-		printf("Opening %s\n", url);
 
-		printf("WAITING FOR CONNECTION... ");
-		
-		if (strcmp(host, "") == 0)
+		if (game_type == HOSTING_GAME)
 		{
+			printf("\nWhen you are hosting,\n");
+			printf("You will need to change the\n");
+			printf("Port address of the Internet\n");
+			printf("Adapter to 6502\n");
+			printf("It is under\n");
+			printf("Settings->RetroNET->Server Port\n\n");
+
+			printf("WAITING FOR CONNECTION... ");
+
 			waiting = 0;
 			connection = false;
+			nseteol(155);
 			while(! connection)
 			{
 				printf("%c%c", waitingstr[waiting], 8);
-				connection = true;
+				nopen(0, FN_READ | FN_WRITE, 0, url);
+				nstatus(0, &bytes_waiting, &connection, &last_error);
 				waiting++;
 				if (waiting > 4)
 					waiting = 0;
 			}
 			mefirst = 1;
 		}
+
+
+		if (game_type == OTHER_HOSTED)
+		{
+			printf("Opening\n%s\n", url);
+
+			nseteol(155);
+			waiting = 0;
+			connection = false;
+			while (!connection)
+			{
+				printf("%c%c", waitingstr[waiting], 8);
+				nopen(0, FN_READ | FN_WRITE, 0, url);
+				nstatus(0, &bytes_waiting, &connection, &last_error);
+				waiting++;
+				if (waiting > 4)
+					waiting = 0;
+			}
+			mefirst = 0;
+		}
 		else
 		{
-			mefirst = 0;
+			mefirst = 1;
 		}
 	}
 #endif
@@ -1905,27 +2009,26 @@ int main()
 		smartkeys_status("What is the name of Player 1?");
 		gets(my_name);
 		my_name[strlen(my_name) - 1] = '\0';
-		my_name[8] = '\0';
 
 		smartkeys_display(NULL, NULL, NULL, NULL, NULL, NULL);
 		smartkeys_status("What is the name of Player 2?");
 		gets(their_name);
 		their_name[strlen(their_name) - 1] = '\0';
-		their_name[8] = '\0';
 	}
 	else
 	{
 		smartkeys_status("What is your name?");
 		gets(my_name);
 		my_name[strlen(my_name) - 1] = '\0';
-		my_name[8] = '\0';
 
 		if (game_type == COMPUTER_OPPONENT)
 		{
-			strcpy(their-name, "Computer");
+
+			strcpy(their_name, "Computer");
 		} else
 		{
-			strcpy(their_name, "Remote");
+			nprint(my_name);
+			ninput(0, their_name);
 		}
 	}
 
@@ -1974,7 +2077,6 @@ int main()
 		printf("What is your name?\n");
 		gets(my_name);
 		my_name[strlen(my_name) - 1] = '\0';
-		my_name[8] = '\0';
 
 		if (game_type == COMPUTER_OPPONENT)
 		{
@@ -1982,7 +2084,9 @@ int main()
 		}
 		else
 		{
-			strcpy(their_name, "Remote");
+			nprint(0, my_name);
+			printf("Waiting for your opponent...\n");
+			ninput(0, their_name);
 		}
 	}
 
