@@ -4,7 +4,7 @@
 unsigned char black_reversi[]        = { "REVERSI" };
 char mirror_black_reversi[] = { (char) 200, (char) 201, (char) 202, (char) 201, (char) 200, (char) 203, (char) 204, (char) 0};
 char white_reversi[]        = { (char) 192, (char) 193, (char) 194, (char) 193, (char) 192, (char) 195, (char) 196, (char) 0};
-char mirror_white_reversi[] = { (char) 144, (char) 145, (char) 146, (char) 145, (char) 144, (char) 146, (char) 147, (char) 0};
+char mirror_white_reversi[] = { (char) 144, (char) 145, (char) 146, (char) 145, (char) 144, (char) 147, (char) 148, (char) 0};
 
 char black_numbers[] = {BLACK_SEPARATOR, BLACK_NUMBERS, BLACK_NUMBERS + 1, BLACK_NUMBERS + 2, BLACK_NUMBERS + 3, BLACK_NUMBERS + 4, BLACK_NUMBERS + 5, BLACK_NUMBERS + 6, BLACK_NUMBERS + 7};
 char white_numbers[] = {WHITE_SEPARATOR, WHITE_NUMBERS, WHITE_NUMBERS + 1, WHITE_NUMBERS + 2, WHITE_NUMBERS + 3, WHITE_NUMBERS + 4, WHITE_NUMBERS + 5, WHITE_NUMBERS + 6, WHITE_NUMBERS + 7};

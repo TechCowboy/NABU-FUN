@@ -20,6 +20,8 @@
 
 PROJECT_DEVICE := nabu
 
+TARGET_EXEC ?= reversi.nabu
+
 ifeq ('$(PROJECT_DEVICE)', 'adam')
 	EXTENSION := .ddp
 else
@@ -47,8 +49,6 @@ APPEM_WINE  := WINE_REQURED
 
 NABU_CACHE  ?= $(shell echo $$NABU_CACHE)
 NABU_WINE   := WINE_REQURED
-
-TARGET_EXEC ?= reversi.nabu
 
 BUILD_DIR ?= ./build
 SRC_DIRS ?= ./src

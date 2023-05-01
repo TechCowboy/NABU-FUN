@@ -1052,14 +1052,18 @@ char getmov_local(char b[64], int *i, int *j)
 		movsprite(*i, *j, MOVING_COLOR);
 		if ((game_type == HOSTING_GAME) || (game_type == OTHER_HOSTED))
 		{
-			if ((old_i != *i) || (old_j != *j) || trig)
+			if ((old_i != *i) || (old_j != *j) || (trig == 0))
 			{
 				old_i = *i;
 				old_j = *j;
 				translate_to_atari(*i, *j, &x, &y);
 				sprintf(atari_output, "%d,%d,%d", x,y,trig);
-				print_info(atari_output);
 				nprint(0, atari_output);
+				if (trig == 0) 
+				{
+					sound_chime();
+					sound_chime();
+				}
 			}
 		}
 
@@ -2001,9 +2005,12 @@ int main()
 #endif
 
 #ifdef ADAM_OR_NABU
+
+	sound_chime();
+
 #ifdef BUILD_ADAM
 
-	if (game_type == LOCAL_OPPONENT)
+		if (game_type == LOCAL_OPPONENT)
 	{
 		smartkeys_display(NULL, NULL, NULL, NULL, NULL, NULL);
 		smartkeys_status("What is the name of Player 1?");
@@ -2057,7 +2064,7 @@ int main()
 	}
 
 #else
-	printf("\n");
+		printf("\n");
 	strcpy(their_name, "Computer");
 	if (game_type == LOCAL_OPPONENT)
 	{
