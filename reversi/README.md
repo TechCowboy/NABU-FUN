@@ -13,15 +13,12 @@ it to the NABU.
 With this program, you can now play against people running 
 Atari 8-bit computers, Apple, ADAM and soon many more.
 
-(Updates to the ADAM version much more 'ADAM' like with
-a smartkey interface, but the business logic is the same.)
-
 Special thanks for Thomas Cherryhomes for providing the 
 initial user interace and introducing me to Magellan which 
 I used to create the current board screen and sprites.
 
 If you're interested in vintage/retro computing, on various
-platforms, you need to check out the Fujinet at 
+platforms, you *need* to check out the Fujinet at 
 https://fujinet.online 
 
 ## NABU Internet Adapter Settings
