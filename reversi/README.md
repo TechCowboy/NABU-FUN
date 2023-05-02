@@ -114,7 +114,11 @@ https://github.com/Rasmus-M/magellan
 I wrote mag2c.py in Python 3 with takes the output of Magellian and replaces the
 C source code for board.c, charset.c and spriteset.c -- a huge timesaver!
 
+## Resources
 
+NABU RETRONET  https://nabu.ca <br/>
+NABU-LIB       [NABU-LIB](https://github.com/DJSures/NABU-LIB)<br/>
+FUJINET        [Fujinet Github](https://github.com/FujiNetWIFI)<br/>
 
 
 
