@@ -119,7 +119,7 @@ C source code for board.c, charset.c and spriteset.c -- a huge timesaver!
 NABU RETRONET  https://nabu.ca <br/>
 NABU-LIB       [NABU-LIB](https://github.com/DJSures/NABU-LIB)<br/>
 FUJINET        [Fujinet Github](https://github.com/FujiNetWIFI)<br/>
-MAME Emualtor  https://gtamp.com/nabu/
+MAME Emualtor  https://gtamp.com/nabu/<br/>
 Magellian      https://github.com/Rasmus-M/magellan
 
 
