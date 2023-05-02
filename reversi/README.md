@@ -62,19 +62,19 @@ and Linux seemlessly provided you set up some environment variables.
 Set these environment variables in your .basrc or windows environment
 to automagically run your code in the mame emulator
 https://gtamp.com/nabu/
-
-NABEM_PATH  = NABU emulator executible path
-NABEM_EXEC  = NABU emulator executible name
-NABU_CACHE  = Directory of the local PAK folder
-NABU_STORE  = Directory of the local File store folder
-
+<br/>
+NABEM_PATH  = NABU emulator executible path<br/>
+NABEM_EXEC  = NABU emulator executible name<br/>
+NABU_CACHE  = Directory of the local PAK folder<br/>
+NABU_STORE  = Directory of the local File store folder<br/>
+<br/>
 Optionally if you want to copy the files to a samba server, you
 can set these environment variables
 
-TNFS_SERVER = IP Address of samba server
-TNFS_SHARE  = The share name
-TNFS_DIR    = the directory within the share
-
+TNFS_SERVER = IP Address of samba server<br/>
+TNFS_SHARE  = The share name<br/>
+TNFS_DIR    = the directory within the share<br/>
+<br/>
 ## Homebrew or CP/M
 
 CP/M isn't working YET; seems like the character set is
