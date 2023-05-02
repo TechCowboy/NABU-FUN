@@ -98,13 +98,13 @@ make go    - With homebrew: <br/>
 ## Copying file into CP/M
 
 Issue the following command to move the executible to drive C. <br/> 
-ALL COMMANDS AND FILENAMES MUST BE IN UPPERCASE
+ALL COMMANDS AND FILENAMES MUST BE IN UPPERCASE<br/>
 ``
 A:RNCMD IA:REVERSI.COM C:REVERSI.COM
 C:
 REVERSI
 ``
-![RNCMD](../images/cpm.png)
+![CP/M Command](../images/cpm.png)
 
 ## Graphics interface
 
