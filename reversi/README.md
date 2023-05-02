@@ -85,24 +85,19 @@ a REVERSI.NABU file or a REVERSI.COM file
 
 ## Make options
 
-make clean - remove previous compiled objects
-make       - build either the NABU homebrew or NABU CP/M executiable
-make tnfs  - copy the Homebrew or CP/M file to your samba server
-make go    - With homebrew:
+make clean - remove previous compiled objects<br/>
+make       - build either the NABU homebrew or NABU CP/M executiable<br/>
+make tnfs  - copy the Homebrew or CP/M file to your samba server<br/>
+make go    - With homebrew: <br/>
                copies the REVERSI.NABU file to the NABU_CACHE directory
                as 000001.nabu then launches the mame emulator
-             With CP/M:
+             With CP/M:<br/>
                copies the REVERSI.COM file to the NABU_STORE directory
-               launches the mame emulator
-               See below for the next step
+               launches the mame emulator. See below for the next step
 
 ## Copying file into CP/M
 
-Again, CP/M isn't working right now, but soon, I suspect it's an
-imcompatiblity with Z88DK's nabu library and NABU-LIB
-
-When CP/M is running you can issue the following command to move
-the executible to drive C.  
+Issue the following command to move the executible to drive C. <br/> 
 ALL COMMANDS AND FILENAMES MUST BE IN UPPERCASE
 ``
 A:RNCMD IA:REVERSI.COM C:REVERSI.COM
