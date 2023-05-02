@@ -14,13 +14,22 @@
 # TNFS_DIR - the directory within the share
 
 
-# COLEM Coleco vision emulator executible path
-# NABEM NABU emulator executible path
-# APPEM Apple emualtor executible path
+# COLEM_EXEC Coleco vision emulator executible with full path 
+# NABEM_PATH NABU emulator executible path
+# NABEM_EXEC NABU emulator executible name
+# APPEM_EXEC Apple emualtor executible with full path
 
 PROJECT_DEVICE := nabu
+# PROJECT TYPE: cpm or homebrew
+PROJECT_TYPE   := homebrew
 
-TARGET_EXEC ?= reversi.nabu
+TARGET_RAW ?= REVERSI
+
+ifeq ('$(PROJECT_TYPE)', 'cpm')
+	TARGET_EXEC ?= $(TARGET_RAW).COM
+else
+	TARGET_EXEC ?= $(TARGET_RAW).NABU
+endif
 
 ifeq ('$(PROJECT_DEVICE)', 'adam')
 	EXTENSION := .ddp
@@ -51,31 +60,52 @@ NABU_CACHE  ?= $(shell echo $$NABU_CACHE)
 NABU_WINE   := WINE_REQURED
 
 BUILD_DIR ?= ./build
-SRC_DIRS ?= ./src
+SRC_DIRS ?= src
 
 CC=zcc
-AS=z88dk-z80asm
+AS=zcc
 
 ADDL_DIR1 := ../../NABU-LIB
 ADDL_DIR2 := ../../NABU-LIB/NABULIB
 ADDL_DIR3 :=
 
-ADDL_LIB1 :=
+ADDL_LIB1 := 
 ADDL_LIB2 := 
 
 SRCS := $(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.asm)
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
-CFLAGS=+nabu  -vn -m  -compiler=sdcc -DBUILD_NABU -I$(ADDL_DIR1) -I$(ADDL_DIR2) -I$(ADDL_DIR3)
-LDFLAGS=+nabu -o$(TARGET_EXEC) -create-app -l$(ADDL_LIB1) -l$(ADDL_LIB2) 
-ASFLAGS=+nabu 
+CFLAGS_RAW=-vn -m  -compiler=sdcc -DBUILD_NABU -I$(ADDL_DIR1) -I$(ADDL_DIR2) -I$(ADDL_DIR3)
+LDFLAGS_RAW=-o$(TARGET_EXEC) -create-app -l$(ADDL_LIB1) -l$(ADDL_LIB2) 
+ASFLAGS_RAW=
+
+CFLAGS_HOMEBREW=+nabu -DBIN_TYPE=BIN_CPM -DDISABLE_KEYBOARD_INT -DDISABLE_VDP $(CFLAGS_RAW) 
+LDFLAGS_HOMEBREW=+nabu $(LDFLAGS_RAW)
+ASFLAGS_HOMEBREW=+nabu $(ASFLAGS_RAW)
+
+CFLAGS_CPM=+cpm -DBIN_TYPE=BIN_CPM -DDISABLE_KEYBOARD_INT -DDISABLE_VDP $(CFLAGS_RAW)
+LDFLAGS_CPM=+cpm $(LDFLAGS_RAW) -pragma-redirect:CRT_FONT=_font_8x8_coleco_adam_system -l$(Z88DK_HOME)/lib/clibs/nabu_clib.lib -l$(Z88DK_HOME)/lib/clibs/nabu_int.lib
+ASFLAGS_CPM=+cpm $(ASFLAGS_RAW)
+
+ifeq ('$(PROJECT_TYPE)', 'cpm')
+	CFLAGS=$(CFLAGS_CPM)
+	LDFLAGS=$(LDFLAGS_CPM)
+	ASFLAGS=$(ASFLAGS_CPM)
+else
+	CFLAGS=$(CFLAGS_HOMEBREW)
+	LDFLAGS=$(LDFLAGS_HOMEBREW)
+	ASFLAGS=$(ASFLAGS_HOMEBREW)
+endif
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS)
+ifeq ('$(PROJECT_TYPE)', 'cpm')
+	$(RM) $(BUILD_DIR)/$(TARGET_RAW).NABU
+endif
 
 # c source
 $(BUILD_DIR)/%.c.o: %.c
@@ -85,13 +115,13 @@ $(BUILD_DIR)/%.c.o: %.c
 # asm source
 $(BUILD_DIR)/%.asm.o: %.asm
 	$(MKDIR_P) $(dir $@)
-	$(AS) $(ASFLAGS) -c $< -o $@
+	$(AS) $(ASFLAGS) -c -o$@  $< 
 
 
 .PHONY: clean
 
 clean:
-	$(RM) -r $(TARGET_EXEC)* $(BUILD_DIR)
+	$(RM) -r $(TARGET_RAW)* $(BUILD_DIR)
 
 go:
 ifeq ('$(PROJECT_DEVICE)','adam')
@@ -101,13 +131,18 @@ ifeq ('$(PROJECT_DEVICE)','apple')
 	$(WINE_REQUIRED) "$(APPEM_EXEC)" -d1 $(TARGET_EXEC).po
 endif
 ifeq ('$(PROJECT_DEVICE)','nabu')
+ifeq ('$(PROJECT_TYPE)', 'cpm')
+	$(info Have you set the NABU Interface Adapter to boot Cloud CP/M? )
+	cp $(TARGET_EXEC) "$(NABU_STORE)/" 
+else
+	$(info Have you set the NABU Interface Adapter to load local PAKs and cleared the cache? )
 	cp ./$(TARGET_EXEC) "$(NABU_CACHE)/000001.nabu"
+endif
 	cd "$(NABEM_PATH)"; \
 	$(WINE_REQUIRED) "$(NABEM_PATH)/$(NABEM_EXEC)" nabupc -window -kbd nabu_hle -hcca null_modem -bitb socket.127.0.0.1:5816 &
 endif
 
 tnfs: $(TARGET_EXEC)
-	cp $(TARGET_EXEC) $(NABU_CACHE)/000001.nabu 
 ifneq ('$(TNFS_SERVER)','')
 ifneq ('$(OS)','')
 	cp $(TARGET_EXEC)$(EXTENSION) //$(TNFS_SERVER)/$(TNFS_SHARE)/$(TNFS_DIR)

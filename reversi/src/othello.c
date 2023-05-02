@@ -120,7 +120,6 @@ int my_mov(char b[64], char p, char o, char e, int *m, int *n);
 #endif
 
 
-
 	/*
 	DefPatternTable EQU     0h
 	DefNameTable    EQU     1800h
@@ -173,8 +172,8 @@ int print_trace(char *message);
 int delay(int d);
 void translate_from_atari(char *atari_input, int *x, int *y, int *trig);
 void translate_to_atari(int i, int j, int *x, int *y);
-char getmov_local(char b[64], int *i, int *j);
-char getmov_remote(char b[64], int *i, int *j);
+char getmov_local(char b[64], int *i, int *j, char my_color);
+char getmov_remote(char b[64], int *i, int *j, char my_color);
 char my_name[16];
 char their_name[16];
 int game_type;
@@ -981,7 +980,7 @@ int prtscr(char b[64])
 }
 
 
-char getmov_local(char b[64], int *i, int *j)
+char getmov_local(char b[64], int *i, int *j, char my_color)
 {
 	int joy = 0;
 	int trig = 1;
@@ -1070,7 +1069,7 @@ char getmov_local(char b[64], int *i, int *j)
 		if (trig == 0)
 		{
 			movsprite(*i, *j, SELECTED_COLOR);
-			if (chkmov(b, mine, *i, *j) > 0)
+			if (chkmov(b, my_color, *i, *j) > 0)
 			{
 				break;
 			}
@@ -1086,7 +1085,7 @@ char getmov_local(char b[64], int *i, int *j)
 	return 'M';
 }
 
-char getmov_remote(char b[64], int *i, int *j) 
+char getmov_remote(char b[64], int *i, int *j, char my_color) 
 {
 	char atari_input[32];
 	int  trig;
@@ -1101,7 +1100,7 @@ char getmov_remote(char b[64], int *i, int *j)
 		if (trig == 0)
 		{
 			movsprite(*i, *j, SELECTED_COLOR);
-			if (chkmov(b, his, *i, *j) > 0)
+			if (chkmov(b, my_color, *i, *j) > 0)
 			{	
 				break;
 			}
@@ -1179,18 +1178,36 @@ char getmov(int *i, int *j)
 		}
 }
 
-#ifdef _BUILD_ADAM
+#ifdef BUILD_ADAM
 
 char ask()
 {
+	char temp[32];
+	int key;
 	char c;
-	print_info("Another game? (Y/N)");
+
+	sprintf(temp, "\n  Does %s want to play first?", my_name);
+	smartkeys_display(NULL, NULL, NULL, NULL, "YES", "NO");
+	smartkeys_status(temp);
+	key = eos_read_keyboard();
+
 	while (1)
 	{
-		c = toupper(getchar());
-		if ((c == 'Y') || (c == 'N'))
+		if (key == SMARTKEY_V)
+		{
+			mefirst = 1;
+			c = 'Y';
 			break;
+		}
+		if (key == SMARTKEY_VI)
+		{
+			mefirst = 0;
+			c = 'N';
+			break;
+		}
 	}
+
+
 	return c;
 }
 
@@ -1489,7 +1506,7 @@ int game(char b[64], int game_type)
 				{
 					sprintf(temp, "%s's Move", my_name);
 					print_info(temp);
-					c = getmov_local(b, &i,&j);
+					c = getmov_local(b, &i,&j, mine);
 				} else
 				{
 					sprintf(temp, "%s's Move", their_name);
@@ -1500,11 +1517,11 @@ int game(char b[64], int game_type)
 							c = my_mov(b, his, mine, EMPTY, &i, &j);
 							break;
 						case LOCAL_OPPONENT:
-							c = getmov_local(b, &i, &j);
+							c = getmov_local(b, &i, &j, his);
 							break;
 						case OTHER_HOSTED:
 						case HOSTING_GAME:
-							c = getmov_remote(b, &i, &j);
+							c = getmov_remote(b, &i, &j, his);
 							break;
 					}
 				}
@@ -1541,7 +1558,7 @@ int game(char b[64], int game_type)
 				{
 					sprintf(temp, "%s's Move", my_name);
 					print_info(temp);
-					c = getmov_local(b, &i, &j);
+					c = getmov_local(b, &i, &j, mine);
 				}
 				else
 				{
@@ -1551,14 +1568,14 @@ int game(char b[64], int game_type)
 					switch (game_type)
 					{
 					case COMPUTER_OPPONENT:
-							c = my_mov(b, his, mine, EMPTY, &i, &j);
+							c = my_mov(b, mine, his, EMPTY, &i, &j);
 							break;
 					case LOCAL_OPPONENT:
-							c = getmov_local(b, &i, &j);
+							c = getmov_local(b, &i, &j, his);
 							break;
 					case OTHER_HOSTED:
 					case HOSTING_GAME:
-							c = getmov_remote(b, &i, &j);
+							c = getmov_remote(b, &i, &j, his);
 							break;
 					}
 				}
@@ -1883,7 +1900,7 @@ int main()
 
 		if (game_type == OTHER_HOSTED)
 		{
-
+			smartkeys_display(NULL, NULL, NULL, NULL, NULL, NULL);
 			smartkeys_status("Enter the IP of the host computer:");
 			gets(host);
 			host[strlen(host) - 1] = '\0';
@@ -1894,6 +1911,7 @@ int main()
 
 		vdp_set_mode(mode_2);
 
+		smartkeys_display(NULL, NULL, NULL, NULL, NULL, NULL);
 		smartkeys_status("WAITING FOR CONNECTION...");
 
 		if (strcmp(host, "") == 0)
@@ -2010,13 +2028,18 @@ int main()
 
 #ifdef BUILD_ADAM
 
-		if (game_type == LOCAL_OPPONENT)
+	if (game_type == LOCAL_OPPONENT)
 	{
+		vdp_color(BACKGROUND_COLOUR_GRAPHICS);
+		vdp_set_mode(mode_2);
+
 		smartkeys_display(NULL, NULL, NULL, NULL, NULL, NULL);
 		smartkeys_status("What is the name of Player 1?");
 		gets(my_name);
 		my_name[strlen(my_name) - 1] = '\0';
 
+		vdp_color(BACKGROUND_COLOUR_GRAPHICS);
+		vdp_set_mode(mode_2);
 		smartkeys_display(NULL, NULL, NULL, NULL, NULL, NULL);
 		smartkeys_status("What is the name of Player 2?");
 		gets(their_name);
@@ -2024,17 +2047,20 @@ int main()
 	}
 	else
 	{
+		vdp_color(BACKGROUND_COLOUR_GRAPHICS);
+		vdp_set_mode(mode_2);
+
+		smartkeys_display(NULL, NULL, NULL, NULL, NULL, NULL);
 		smartkeys_status("What is your name?");
 		gets(my_name);
 		my_name[strlen(my_name) - 1] = '\0';
 
 		if (game_type == COMPUTER_OPPONENT)
 		{
-
 			strcpy(their_name, "Computer");
 		} else
 		{
-			nprint(my_name);
+			nprint(0, my_name);
 			ninput(0, their_name);
 		}
 	}
@@ -2042,6 +2068,9 @@ int main()
 	if ((game_type == LOCAL_OPPONENT) || (game_type == COMPUTER_OPPONENT))
 	{
 		char temp[32];
+		vdp_color(BACKGROUND_COLOUR_GRAPHICS);
+		vdp_set_mode(mode_2);
+
 		sprintf(temp, "\n  Does %s want to play first?", my_name);
 		smartkeys_display(NULL, NULL, NULL, NULL,"YES","NO");
 		smartkeys_status(temp);
@@ -2156,7 +2185,6 @@ int main()
 		i = prtscr(b);
 
 #ifdef ADAM_OR_NABU
-
 
 		if (i>0) 
 			sprintf(message, "You lost by %u", i);

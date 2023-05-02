@@ -2,17 +2,12 @@
  * #Fujinet Network Functions
  */
 
-#define BIN_TYPE BIN_CPM
-//#define BIN_TYPE BIN_HOMEBREW
-#define DISABLE_VDP
-#define DISABLE_KEYBOARD_INT
-//#define DISABLE_HCCA_RX_INT
-
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "network.h"
+#include <msx.h>
 #include "RetroNET-FileStore.h"
 
 unsigned char response[1024];
@@ -43,6 +38,8 @@ unsigned char network_init(void)
     globalStatus.connected = 0;
     globalStatus.error = 0;
     globalStatus.rxBytesWaiting = 0;
+
+    return 0;
 }
 
 unsigned char network_status(NetStatus *s)
@@ -74,6 +71,9 @@ unsigned char network_open(char *url, unsigned char mode, unsigned char translat
     int port;
     int file_handle = 0xFF;
     char *data;
+
+    mode = mode;
+    translation = translation;
 
     strcpy(url2, url);
     data = strrchr(url2, ':');

@@ -1,9 +1,7 @@
 
-#define BIN_TYPE BIN_CPM
 #define PROTOTYPES_ONLY
 #include "sound.h"
 #include <NABU-LIB.h>
-
 
 void sound_init(void)
 {

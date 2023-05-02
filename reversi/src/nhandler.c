@@ -71,6 +71,9 @@ void nctrl(int basic_unit, int command, char *buffer)
 {
     if (basic_unit != 0)
         return;
+
+    command = command;
+    buffer = buffer;
         
     return;
 }
@@ -132,12 +135,15 @@ void njson(int basic_unit, int onoff)
 {
     if (basic_unit != 0)
         return;
+    onoff = onoff;
 }
 
 void nquery(int basic_unit, char *query, char *value)
 {
     if (basic_unit != 0)
         return;
+    query = query;
+    value = value;
 }
 
 void ntime(int *year, int *month, int *day, int *hour, int *minute, int *second)
