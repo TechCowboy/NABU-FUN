@@ -6,7 +6,7 @@ The original text based version was found as an example in the
 z88dk examples folder called othello and has been adapted by
 Norman Davie a.k.a TechCowboy.
 
-When creating a reversi program for the Coleco ADAM for the
+I realized when creating a reversi program for the Coleco ADAM for the
 FujiNet project, the hardware was so similar it was easy to port 
 it to the NABU.
 
